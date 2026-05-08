@@ -10,7 +10,7 @@
 #
 # Extracted light curves will have 10s bins.
 #
-# HEASoft must be initialised or XSelect commands will fail
+# HEASoft must be initialised or XSelect commands will fail.
 #
 # Author: Thomas Hodd
 #

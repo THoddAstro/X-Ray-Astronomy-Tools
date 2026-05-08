@@ -5,7 +5,7 @@
 # Will process all observations listed in obs.txt, this should be in CSV format with columns:
 # obs_name, 3/obs_id, 311/obs_mode, min_energy, max_energy
 #
-# HEASoft must be initialised or XSelect commands will fail
+# HEASoft must be initialised or XSelect commands will fail.
 #
 # Author: Thomas Hodd
 #

@@ -7,7 +7,7 @@
 #
 # Requires that xtend_process.sh has already been ran and region files have been created.
 #
-# HEASoft must be initialised or XSelect commands will fail
+# HEASoft must be initialised or XSelect commands will fail.
 #
 # Author: Thomas Hodd
 #
@@ -56,7 +56,7 @@ for i in "${!obs[@]}"; do
     label="${lbl[i]}"
     obsmode="${mode[i]}"
     obsid=${obsid##*/}
-    cd "${label}/${obsid}/analysis"
+    cd ${label}/${obsid}/analysis
 
     # Extract image to identify src/bkg regions
     echo -e "${BLUE}Reading image from $label ($obsid) ...${ENDC}"
