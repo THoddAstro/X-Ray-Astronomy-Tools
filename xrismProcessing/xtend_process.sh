@@ -4,6 +4,7 @@
 #
 # Will process all observations listed in obs.txt, this should be in CSV format with columns:
 # obs_name, 3/obs_id, 311/obs_mode, min_energy, max_energy
+# (Energies in eV)
 #
 # Requires get_regions_xrism.py in the same directory as bash script
 # User must select background region when prompted, and verify the source has been correctly identified.
@@ -44,8 +45,8 @@ while IFS=", " read -r label obsid obsmode enmin enmax; do
     mode+=("$obsmode")
 
     # Determine min/max pha channels from energy limits
-    minpha=$(awk "BEGIN { printf(\"%.0f\", $enmin * 166.7) }")
-    maxpha=$(awk "BEGIN { printf(\"%.0f\", $enmax * 166.7) }")
+    minpha=$(awk "BEGIN { printf(\"%.0f\", $enmin * 0.1667) }")
+    maxpha=$(awk "BEGIN { printf(\"%.0f\", $enmax * 0.1667) }")
     emins+=("$enmin")
     emaxs+=("$enmax")
     phamins+=("$minpha")
@@ -94,7 +95,7 @@ xtend_batch_process
 clear all proceed=yes
 read events xa${obsid}xtd_p0${obsmode}00010_cl.evt.gz .
 set image det
-filter pha_cut ${emins[i]} ${emaxs[i]}
+filter pha_cut ${phamins[i]} ${phamins[i]}
 extr image
 save image ${label}.img clobberit=true
 exit save_session=no

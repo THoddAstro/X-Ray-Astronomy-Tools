@@ -4,6 +4,7 @@
 #
 # Will process all observations listed in obs.txt, this should be in CSV format with columns:
 # obs_name, 3/obs_id, 311/obs_mode, min_energy, max_energy
+# (Energies in eV)
 #
 # Requires that xtend_process.sh has already been ran and region files have been created.
 #
@@ -56,7 +57,7 @@ for i in "${!obs[@]}"; do
     label="${lbl[i]}"
     obsmode="${mode[i]}"
     obsid=${obsid##*/}
-    cd ${label}/${obsid}/analysis
+    cd "${label}/${obsid}/analysis"
 
     # Extract image to identify src/bkg regions
     echo -e "${BLUE}Reading image from $label ($obsid) ...${ENDC}"
@@ -64,8 +65,8 @@ for i in "${!obs[@]}"; do
 
     srcfile="${label}_src.reg"
     bkgfile="${label}_bkg.reg"
-    src_spec="${label}_src.pi"
-    bkg_spec="${label}_bkg.pi"
+    src_spec="${label}_src.pha"
+    bkg_spec="${label}_bkg.pha"
     rmf="${label}.rmf"
 
     # Extract Light Curves
@@ -88,5 +89,4 @@ EOF
     xtdrmf $src_spec $rmf
 
     cd ../../../
-    exit 1
 done
