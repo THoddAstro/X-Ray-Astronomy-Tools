@@ -5,9 +5,9 @@ Create a SpectralPCA object with a list of Spectra objects and call `do_pca()` t
 
 Author: Thomas Hodd
 
-Date - 8th May 2026
+Date - 14th May 2026
 
-Version - 1.1
+Version - 1.2
 """
 import numpy as np
 import astropy.io.fits as pyfits
@@ -296,18 +296,20 @@ class SpectralPCA:
         if errors:
             self.__get_pca_errors()
 
-    def plot_pca_result(self, max_spec: int = 6) -> None:
+    def plot_pca_result(self, max_spec: int = 6, flip: bool = False) -> None:
         """
         Plots the results of the PCA.
 
         :param max_spec: Maximum number of eigenspectra to plot
+        :param flip: Switch +ve/-ve to keep PC 1 positive
         :return: None
         """
         # Eigenspectra plot
         n_spec = min(self._n_spectra, max_spec)
         _, ax = plt.subplots(n_spec, 1, sharex=True, gridspec_kw={'hspace': 0}, figsize=(8, n_spec * 2))
         for i in range(0, n_spec):
-            ax[i].errorbar(self.energies, self.principal_comps[i], self.err_spectra[i], ls='none', c=COLOURS[i % len(COLOURS)])
+            rate = -self.principal_comps[i] if flip else self.principal_comps[i]
+            ax[i].errorbar(self.energies, rate, self.err_spectra[i], ls='none', c=COLOURS[i % len(COLOURS)])
             ax[i].set_xscale("log")
             ax[i].axhline(y=0, color="grey", linestyle="--", zorder=0)
             ax[i].set_xlim(min(self.energies), max(self.energies))
