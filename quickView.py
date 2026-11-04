@@ -29,9 +29,9 @@ Options
 
 Author - Thomas Hodd
 
-Date - 21st August 2025
+Date - 4th November 2025
 
-Version - 1.2
+Version - 1.3
 """
 import argparse
 import os
@@ -57,7 +57,7 @@ SIZE = {1 : (10, 6),
 # Input args
 parser = argparse.ArgumentParser(description="Quickly view light curves.")
 parser.add_argument("filename", type=str, help="Light curve file")
-parser.add_argument("binsize", type=int, nargs="?", default=100, help="Bin size in seconds (optional)")
+parser.add_argument("binsize", type=int, nargs="?", default=0, help="Bin size in seconds (optional)")
 parser.add_argument("-s", "--save", action="store_true", help="Save plot to image")
 parser.add_argument("-x", "--extra", nargs="+", default=[], help="Add additional light curves to plot")
 parser.add_argument("-m", "--mean", action="store_true", help="Show mean/median statistics")
@@ -65,6 +65,7 @@ parser.add_argument("-t", "--stdev", action="store_true", help="Show standard de
 parser.add_argument("-d", "--xmmdata", action="store_true", help="Load XMM light curves")
 parser.add_argument("-e", "--energy", nargs="+", default=["0.3", "10"], help="Specify energy range of XMM light curves")
 parser.add_argument("-a", "--all", action="store_true", help="Plot all light curves in directory")
+parser.add_argument("-g", "--gaps", action="store_true", help="Light curve contains gaps, bin over gaps")
 
 # Parse args
 args = parser.parse_args()
@@ -77,14 +78,15 @@ std_stats = args.stdev
 xmm_data = args.xmmdata
 energy = args.energy
 all_lc = args.all
+gaps = args.gaps
 
 energy = [int(float(i) * 1000) for i in energy]
 
 if xmm_data:
     # Load XMM data
-    all_lcs = [LightCurve(f"{filename}_lc_raw_{energy[0]}-{energy[1]}.fits").rebin(binsize),
-               LightCurve(f"{filename}_bg_raw_{energy[0]}-{energy[1]}.fits").rebin(binsize),
-               LightCurve(f"{filename}_lccor_{energy[0]}-{energy[1]}.fits").rebin(binsize)]
+    all_lcs = [LightCurve(f"{filename}_lc_raw_{energy[0]}-{energy[1]}.fits"),
+               LightCurve(f"{filename}_bg_raw_{energy[0]}-{energy[1]}.fits"),
+               LightCurve(f"{filename}_lccor_{energy[0]}-{energy[1]}.fits")]
     windows = [[all_lcs[0].time[0], all_lcs[0].time[-1]]]
     window_map = [0, 0, 0]
     if extra:
@@ -94,18 +96,18 @@ else:
     if all_lc:
         all_lcs = []
         for f in os.listdir(cwd):
-            all_lcs.append(LightCurve(f"{cwd}/{f}").rebin(binsize))
+            all_lcs.append(LightCurve(f"{cwd}/{f}"))
         COLOURS = [None] * len(all_lcs)
     else:
         # Open the light curve file
-        lc:  LightCurve = LightCurve(filename).rebin(binsize)
+        lc:  LightCurve = LightCurve(filename)
         lc.filename = filename
 
         # Add additional light curves
         extra_lcs = []
         if extra:
             for l in extra:
-                extra_lcs.append(LightCurve(l).rebin(binsize))
+                extra_lcs.append(LightCurve(l))
 
         for l, name in zip(extra_lcs, extra):
             l.filename = name
@@ -127,6 +129,17 @@ else:
                 window_map.append(i+1)
                 break
 
+# Apply binning
+if binsize > 0:
+    for i in range(len(all_lcs)):
+        if not gaps:
+            rebinned = all_lcs[i].rebin(binsize)
+        else:
+            rebinned = all_lcs[i].bin_by_gaps()
+        all_lcs[i].time = rebinned.time
+        all_lcs[i].rate = rebinned.rate
+        all_lcs[i].error = rebinned.error
+
 # Create Figure
 fig, ax = plt.subplots(*LAYOUT[len(windows)], figsize=SIZE[len(windows)], label=f"QuickView - {filename}")
 
@@ -139,7 +152,7 @@ plot_set = [False] * len(windows)
 plot_list = []
 for i, l in enumerate(all_lcs):
     plot = window_map[i]
-    plot_list.append(ax[plot].scatter(l.time, l.rate, marker="+", s=20, color=COLOURS[i]))
+    plot_list.append(ax[plot].errorbar(l.time, l.rate, yerr=l.error, marker="+", color=COLOURS[i], linewidth=0, elinewidth=1))
     if mean_stats:
         mean = np.mean(l.rate)
         median = np.median(l.rate)
